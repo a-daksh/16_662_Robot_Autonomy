@@ -36,7 +36,6 @@ def R2axisang(R):
 
     return[x, y, z], ang
 
-
 def BlockDesc2Points(H, Dim):
     center = H[0:3,3]
     axes = [H[0:3,0],H[0:3,1],H[0:3,2]]	
@@ -68,8 +67,16 @@ def CheckPointOverlap(pointsA, pointsB, axis):
     
     """
     # TODO: Project both set of points on the axis and check for overlap
+    overlap=False
+    projections_A = np.dot(pointsA, axis)
+    projections_B = np.dot(pointsB, axis)
+    minA, maxA = np.min(projections_A), np.max(projections_A)
+    minB, maxB = np.min(projections_B), np.max(projections_B)
+    
+    if ((minA > maxB) or (minB > maxA)):
+        overlap=True
 
-    raise NotImplementedError
+    return overlap
 
 def CheckBoxBoxCollision(pointsA, axesA, pointsB, axesB):
     """
@@ -91,10 +98,21 @@ def CheckBoxBoxCollision(pointsA, axesA, pointsB, axesB):
     #Hint: Use CheckPointOverlap() function to check for overlap along each axis
     
     #TODO: Check if cuboids collide along the surface normal of box A 
+    for axis in axesA:
+        if CheckPointOverlap(pointsA, pointsB, axis):
+            return True
     #TODO: Check if cuboids collide along the surface normal of box B
-    #TODO: Check for edge-edge collisions
-
-    raise NotImplementedError
+    for axis in axesB:
+        if CheckPointOverlap(pointsA, pointsB, axis):
+            return True
+    #TODO: Check for edge-edge collisions 
+    for axisA in axesA:
+        for axisB in axesB:
+            cross_axis = np.cross(axisA, axisB)
+            if CheckPointOverlap(pointsA, pointsB, cross_axis):
+                return True
+            
+    return False
 
 if __name__ == "__main__":
     # Run Test Cases
