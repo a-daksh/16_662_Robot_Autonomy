@@ -64,7 +64,7 @@ class FrankArm:
         self.qmin=[-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973] # NOTE-does not include grippers
         self.qmax=[2.8973, 1.7628, 2.8973, -0.0698, 2.8973, 3.7525, 2.8973] # NOTE-does not include grippers
 
-        # Robot collisions descriptors: (base frame, (rpy xyz), lwh 
+        # Robot collision blocks descriptors: (base frame, (rpy xyz), lwh 
         self.Cidx = [1, 1, 1, 1, 1, 3, 4, 5, 5, 5, 7, 7] # Joint frame ID for each collision block
 
         # (rpy xyz) poses of the robot arm blocks
@@ -242,8 +242,12 @@ class FrankArm:
         
         # Note: you can use rt.BlockDesc2Points to get the cpoints and axes for each collision block
         for i, link in enumerate(self.Cidx):
-            self.Tcoll[i]= ...
-            self.Cpoints[i], self.Caxes[i] = ...
+            if link == 1:  # Base frame
+                self.Tcoll[i] = np.matmul(self.Tbase, self.Tblock[i])
+            else:
+                self.Tcoll[i] = np.matmul(self.Tcurr[link-1], self.Tblock[i])
+        
+            self.Cpoints[i], self.Caxes[i] = rt.BlockDesc2Points(self.Tcoll[i], self.Cdim[i])
         
     def DetectCollision(self, ang, pointsObs, axesObs):		
         self.CompCollisionBlockPoints(ang)
