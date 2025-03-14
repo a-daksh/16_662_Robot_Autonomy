@@ -73,7 +73,7 @@ def CheckPointOverlap(pointsA, pointsB, axis):
     minA, maxA = np.min(projections_A), np.max(projections_A)
     minB, maxB = np.min(projections_B), np.max(projections_B)
     
-    if ((minA > maxB) or (minB > maxA)):
+    if ((minA <= minB <=maxA ) or (minB <= minA <=maxB)):
         overlap=True
 
     return overlap
@@ -99,20 +99,20 @@ def CheckBoxBoxCollision(pointsA, axesA, pointsB, axesB):
     
     #TODO: Check if cuboids collide along the surface normal of box A 
     for axis in axesA:
-        if CheckPointOverlap(pointsA, pointsB, axis):
-            return True
+        if not CheckPointOverlap(pointsA, pointsB, axis):
+            return False
     #TODO: Check if cuboids collide along the surface normal of box B
     for axis in axesB:
-        if CheckPointOverlap(pointsA, pointsB, axis):
-            return True
+        if not CheckPointOverlap(pointsA, pointsB, axis):
+            return False
     #TODO: Check for edge-edge collisions 
     for axisA in axesA:
         for axisB in axesB:
             cross_axis = np.cross(axisA, axisB)
-            if CheckPointOverlap(pointsA, pointsB, cross_axis):
-                return True
+            if not CheckPointOverlap(pointsA, pointsB, cross_axis):
+                return False
             
-    return False
+    return True
 
 if __name__ == "__main__":
     # Run Test Cases
