@@ -101,32 +101,67 @@ def RRTQuery():
     global rrtVertices
     global rrtEdges
 
-    while len(rrtVertices)<3000 and not FoundSolution:
-        # TODO: - Implement RRT algorithm to find a path to the goal configuration
-        # Use the global rrtVertices, rrtEdges, plan and FoundSolution variables in your algorithm
-        pass
+    step_size = 0.1
+    goal_bias = 0.1  
+    
+    while len(rrtVertices) < 3000 and not FoundSolution:
+        print(len(rrtVertices))
+        
+        if np.random.random() < goal_bias:
+            q_r = qGoal
+        else:
+            q_r = mybot.SampleRobotConfig()
+        
+        nearest_idx = FindNearest(rrtVertices, q_r)
+        q_n = rrtVertices[nearest_idx]
+        
+        direction = np.array(q_r) - np.array(q_n)
+        distance = np.linalg.norm(direction)
+        direction = direction / distance
+        
+        # if distance > 0.0:
+        
+        q_new = np.array(q_n) + direction * min(step_size, distance)
+        
+        if not mybot.DetectCollision(q_new, pointsObs, axesObs):
+            if not mybot.DetectCollisionEdge(q_n, q_new, pointsObs, axesObs):
+                rrtVertices.append(q_new.tolist())
+                rrtEdges.append(nearest_idx)
+                new_idx = len(rrtVertices) - 1
+                
+                if np.linalg.norm(np.array(q_new) - np.array(qGoal)) < step_size:
+                    if not mybot.DetectCollisionEdge(q_new, qGoal, pointsObs, axesObs):
+                        rrtVertices.append(qGoal)
+                        rrtEdges.append(new_idx)
+                        FoundSolution = True
 
-    ### if a solution was found
     if FoundSolution:
+        print("Path found, Shortening")
         # Extract path
-        c=-1 #Assume last added vertex is at goal 
+        c = -1  # Assume last added vertex is at goal 
         plan.insert(0, rrtVertices[c])
 
         while True:
-            c=rrtEdges[c]
+            c = rrtEdges[c]
             plan.insert(0, rrtVertices[c])
-            if c==0:
+            if c == 0:
                 break
 
-        # TODO - Path shortening
+        # Path shortening
         for i in range(150):
-            # TODO: - Implement path shortening algorithm to shorten the path
-            pass
-    
+            if len(plan) < 3:
+                break
+                
+            idx1, idx2 = sorted(np.random.choice(len(plan), size=2, replace=False))            
+            if idx2 == idx1 + 1:
+                continue                
+            if not mybot.DetectCollisionEdge(plan[idx1], plan[idx2], pointsObs, axesObs):
+                del plan[idx1+1:idx2]
+        
         for (i, q) in enumerate(plan):
             print("Plan step: ", i, "and joint: ", q)
-    
-        plan_length = len(plan)	
+        
+        plan_length = len(plan)    
         naive_interpolation(plan)
         return
 
