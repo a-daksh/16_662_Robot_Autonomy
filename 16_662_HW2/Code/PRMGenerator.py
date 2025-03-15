@@ -46,9 +46,22 @@ def PRMGenerator():
     pointsObs = np.array(pointsObs)
     axesObs = np.array(axesObs)
     
-    while len(prmVertices)<1000:
-        # sample random poses
+    while len(prmVertices) < 1000:
+        
         print(len(prmVertices))
+        q_r = mybot.SampleRobotConfig()
+        if not mybot.DetectCollision(q_r, pointsObs, axesObs):
+
+            new_idx = len(prmVertices)
+            prmVertices.append(q_r)
+            prmEdges.append([])
+
+            for i, q_n in enumerate(prmVertices[:-1]):
+                dist = np.linalg.norm(np.array(q_r) - np.array(q_n))
+
+                if dist <= 2.0 and not mybot.DetectCollisionEdge(q_r, q_n, pointsObs, axesObs):
+                    prmEdges[new_idx].append(i)
+                    prmEdges[i].append(new_idx)
 
     #Save the PRM such that it can be run by PRMQuery.py
     f = open("myPRM.p", 'wb')
